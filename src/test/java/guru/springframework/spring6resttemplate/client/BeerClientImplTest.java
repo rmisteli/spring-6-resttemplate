@@ -67,7 +67,8 @@ class BeerClientImplTest {
                 .upc("123424532")
                 .build();
 
-        BeerDTO savedDto = beerClient.createBeer(newDto);
+        BeerDTO savedDto;
+        savedDto = beerClient.createBeer(newDto);
         assertNotNull(savedDto);
     }
 
