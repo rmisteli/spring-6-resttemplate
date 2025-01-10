@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Objects.isNull;
@@ -26,7 +27,7 @@ public class OAuthClientInterceptor  implements ClientHttpRequestInterceptor {
     private final Authentication principal;
     private final ClientRegistration clientRegistration;
 
-    public OAuthClientInterceptor(OAuth2AuthorizedClientManager manager, ClientRegistrationRepository clientRegistrationRepository) {
+    public OAuthClientInterceptor(OAuth2AuthorizedClientManager manager,  ClientRegistrationRepository clientRegistrationRepository) {
         this.manager = manager;
         this.principal = createPrincipal();
         this.clientRegistration = clientRegistrationRepository.findByRegistrationId("springauth");
@@ -41,11 +42,12 @@ public class OAuthClientInterceptor  implements ClientHttpRequestInterceptor {
 
         OAuth2AuthorizedClient client = manager.authorize(oAuth2AuthorizeRequest);
 
-        if(isNull(client)) {
+        if (isNull(client)) {
             throw new IllegalStateException("Missing credentials");
         }
 
-        request.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + client.getAccessToken().getTokenValue());
+        request.getHeaders().add(HttpHeaders.AUTHORIZATION,
+                "Bearer " + client.getAccessToken().getTokenValue());
 
         return execution.execute(request, body);
     }
@@ -53,13 +55,8 @@ public class OAuthClientInterceptor  implements ClientHttpRequestInterceptor {
     private Authentication createPrincipal() {
         return new Authentication() {
             @Override
-            public String getName() {
-                return clientRegistration.getClientId();
-            }
-
-            @Override
             public Collection<? extends GrantedAuthority> getAuthorities() {
-                return List.of();
+                return Collections.emptySet();
             }
 
             @Override
@@ -74,7 +71,7 @@ public class OAuthClientInterceptor  implements ClientHttpRequestInterceptor {
 
             @Override
             public Object getPrincipal() {
-                return null;
+                return this;
             }
 
             @Override
@@ -84,6 +81,11 @@ public class OAuthClientInterceptor  implements ClientHttpRequestInterceptor {
 
             @Override
             public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+            }
+
+            @Override
+            public String getName() {
+                return clientRegistration.getClientId();
             }
         };
     }
